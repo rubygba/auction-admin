@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import { Link, Route } from 'react-router-dom'
 import CONFIG from '../common/config';
-import { getFormatDate } from '../common/tools';
+import { getFormatDate, getFormatDate2 } from '../common/tools';
 
-import { Layout, Breadcrumb, Menu, Icon, LocaleProvider, DatePicker, message, Button, Table, Input, Modal, Radio, Form, Upload } from 'antd';
+import { Layout, Breadcrumb, Menu, Icon, LocaleProvider, DatePicker, message, Button, Table, Input, InputNumber, Modal, Radio, Form, Upload } from 'antd';
 import Downhead from './Downhead'
 
 // 由于 antd 组件的默认文案是英文，所以需要修改为中文
@@ -23,8 +23,22 @@ class Apppm extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      begindate: getFormatDate2(0, -1),
+      enddate: getFormatDate2(0),
+
+      searchTitle: '',
+      searchSsn: '',
+      searchStartD: '',
+      searchEndD: '',
+      before: 0,
+      underway: 0,
+      after: 0,
+      soldout: 0,
+
       startDate: getFormatDate(0, -1),
       endDate: getFormatDate(0),
+
+      filesTable: {},
       userInfo: {},
       isModal: false,
       isModify: false,
@@ -50,10 +64,8 @@ class Apppm extends Component {
         title: '状态',
         dataIndex: 'goodstatus',
       }, {
-      }, {
         title: '开始时间',
         dataIndex: 'begindate',
-      }, {
       }, {
         title: '结束时间',
         dataIndex: 'enddate',
@@ -62,47 +74,13 @@ class Apppm extends Component {
         dataIndex: 'createTime',
         render: (text, record) => (
           <div>
-            <Button onClick={this.updateRecord.bind(this, record)} type="primary" style={{margin: '0 8px 0 0'}}>编辑</Button>
-            <Link to={`/push/pmdetail/${record.id}`}><Button onClick={this.setPmName.bind(this, record)} style={{margin: '0 8px 0 0'}}>查看商品</Button></Link>
-            <Button onClick={this.updateApk.bind(this, record)} style={{margin: '0 8px 0 0'}}>查看订单</Button>
-            <Button onClick={this.updateApk.bind(this, record)}>强制下架</Button>
+            <Button onClick={this.showModModal.bind(this, record)} type="primary" style={{margin: '0 8px 0 0'}}>编辑</Button>
+            <Link to={`/push/pmdetail/${record.goodssn}`}><Button onClick={this.setPmName.bind(this, record)} style={{margin: '0 8px 0 0'}}>查看商品</Button></Link>
+            <Link to={`/push/pmqiddetail/${record.goodssn}`}><Button onClick={this.updateApk.bind(this, record)} style={{margin: '0 8px 0 0'}}>查看订单</Button></Link>
+            <Button onClick={this.deletePm.bind(this, record)}>强制下架</Button>
           </div>),
-      // }, {
-      //   title: '注册率',
-      //   dataIndex: 'regrate',
-      //   key: 'regrate',
-      // }, {
-      //   title: 'Action',
-      //   key: 'action',
-      //   render: (text, record) => (
-      //     <span>
-      //       <a href="javascript:;">Action 一 {record.name}</a>
-      //       <a href="javascript:;" className="ant-dropdown-link">
-      //         More actions <Icon type="down" />
-      //       </a>
-      //     </span>
-      //   ),
-      }],
-      dataArr: [
-        // {
-        //   "id": 1,
-        //   "productId": "001",
-        //   "productName": "猫扑小说安卓",
-        //   "extensionStatus": 1,
-        //   "urlPrefix": "http://www.shareinstall.com/demo.html?appkey=7FBKAE6B22FK6E&channel=Mop00001",
-        //   "createTime": 1528182178000,
-        //   "updateTime": null
-        // },
-        // {
-        //   "id": 2,
-        //   "productId": "002",
-        //   "productName": "猫扑小说ios",
-        //   "extensionStatus": 2,
-        //   "urlPrefix": "http://www.shareinstall.com/demo.html?appkey=7FBKAE6B22FK6E&channel=Mop00002",
-        //   "createTime": 1528278533000,
-        //   "updateTime": 1528278585000
-        // }
-      ],
+        }],
+      dataArr: [],
     };
 
     // if (!window.localStorage.userAdmin) {
@@ -118,8 +96,8 @@ class Apppm extends Component {
 
   getData = () => {
     let _token = window.localStorage.tokenAdmin
-    // fetch(CONFIG.devURL + `/songhengstore/goods/getgoods?goodstitle=${'商品标题'}&goodssn=${'商品编号'}&begindate=${'竞拍开始时间'}&enddate=${'竞拍结束时间'}&before=${'未开始'}&underway=${'竞拍中'}&after=${'已结束'}&soldout=${'已下架'}`, {
-    fetch(CONFIG.devURL + `/csonghengstore/goods/getgoods`, {
+    fetch(CONFIG.devURL + `/goods/getgoods?goodstitle=${this.state.searchTitle}&goodssn=${this.state.searchSsn}&begindate=${this.state.searchStartD}&enddate=${this.state.searchEndD}&before=${this.state.before}&underway=${this.state.underway}&after=${this.state.after}&soldout=${this.state.soldout}`, {
+    // fetch(CONFIG.devURL + `/goods/getgoods`, {
       method: 'GET',
       credentials: 'include',
       mode: 'cors'
@@ -147,12 +125,29 @@ class Apppm extends Component {
         console.error(e)
       })
   }
+  handleSearch = (e) => {
+    e.preventDefault();
+
+    this.props.form.validateFields((err, values) => {
+      console.log('Received values of form: ', values);
+      this.setState({
+        searchTitle: values.top_name || '',
+        searchSsn: values.top_ssn || '',
+        before: values.top_radio === 'before' ? 1 : 0,
+        underway: values.top_radio === 'underway' ? 1 : 0,
+        after: values.top_radio === 'after' ? 1 : 0,
+        soldout: values.top_radio === 'soldout' ? 1 : 0
+      }, () => {
+        this.getData()
+      })
+    });
+  }
   handleSubmit = (e) => {
     e.preventDefault();
 
-    if (this.state.uploading) {
-      return
-    }
+    // if (this.state.uploading) {
+    //   return
+    // }
 
     this.props.form.validateFields((err, values) => {
       if (!err) {
@@ -162,29 +157,51 @@ class Apppm extends Component {
         })
 
         console.log('Received values of form: ', values);
-        let _token = window.localStorage.tokenAdmin
-        let _pre = '/product/add?'
-        if (this.state.isModify) {
-          _pre = '/product/update?id=' + this.state.modifyId + '&'
+        // let _token = window.localStorage.tokenAdmin
+        // let _pre = '/product/add?'
+        // if (this.state.isModify) {
+        //   _pre = '/product/update?id=' + this.state.modifyId + '&'
+        // }
+
+        // 处理图片上传
+        let imgStr = []
+        if (values.imgs) {
+          for (let i = 0; i < values.imgs.length && i < 5; i++) {
+            if (values.imgs[i]) {
+              imgStr.push(this.state.filesTable[values.imgs[i].uid])
+            }
+          }
         }
+        imgStr = imgStr.join(',')
 
-        var fd = new FormData()
-        fd.append('file', values.imgs[0].originFileObj)
+        // 处理加价金额
+        let addStr = []
+        addStr.push(values.addmoney)
+        if (values.addmoney2) addStr.push(values.addmoney2)
+        if (values.addmoney3) addStr.push(values.addmoney3)
+        if (values.addmoney4) addStr.push(values.addmoney4)
+        if (values.addmoney5) addStr.push(values.addmoney5)
+        addStr = addStr.join(',')
 
-        fetch(CONFIG.devURL + `/csonghengstore/images`, {
-          method: 'POST',
+        fetch(CONFIG.devURL + `/goods/addgoods?goodstitle=${values.goodstitle}&goodstitle=${values.goodstitle}&goodsdesc=${values.goodsdesc}&floorprice=${values.floorprice}&begindate=${this.state.begindate}&enddate=${this.state.enddate}&imgs=${imgStr}&addmoney=${addStr}`, {
+          method: 'GET',
           credentials: 'include',
-          mode: 'cors',
-          body: fd
+          mode: 'cors'
         })
           .then(res => res.json())
           .then(json => {
             console.log(json)
+            alert(json.message);
+            this.getData()
+            this.setState({
+              okText: 'OK',
+              uploading: false,
+              isModal: false,
+            })
           })
           .catch(e => {
-            console.error(e)
+            alert(e)
           })
-
 
         // 创建新产品
         // fetch(CONFIG.devURL + `${_pre}productName=${values.productName}&extensionStatus=${values.extensionStatus}&token=${_token}`, {
@@ -316,6 +333,23 @@ class Apppm extends Component {
         alert(e)
       })
   }
+  deletePm = (record) => {
+    console.log(record)
+    fetch(CONFIG.devURL + `/goods/delGoods?goodsSn=${record.goodssn}`, {
+      method: 'GET',
+      credentials: 'include',
+      mode: 'cors'
+    })
+      .then(res => res.json())
+      .then(json => {
+        console.log(json)
+        this.getData()
+        alert(json.message)
+      })
+      .catch(e => {
+        alert(e)
+      })
+  }
   updateApk = (record) => {
     fetch(CONFIG.devURL + `/songhengstore/images`, {
       method: 'GET',
@@ -337,16 +371,32 @@ class Apppm extends Component {
   }
   showModModal = (record) => {
     console.log(record)
+    let _imgs = []
+
+    for (let i = 0; i < record.imgs.length; i++) {
+      if (record.imgs[i]) {
+        let temp = {
+          uid: -(i + 1),
+          name: 'img',
+          status: 'done',
+          url: record.imgs[i],
+          thumbUrl: record.imgs[i]
+        }
+        _imgs.push(temp)
+      }
+    }
+
     this.props.form.setFieldsValue({
-      id: record.id,
-      productName: record.productName,
-      extensionStatus: record.extensionStatus,
+      goodstitle: record.goodstitle,
+      floorprice: record.floorprice,
+      goodsdesc: record.goodsdesc,
+      imgs: _imgs
     })
     this.setState({
       isModal: true,
-      modalTitle: '更新产品信息',
+      modalTitle: '更新商品信息',
       isModify: true,
-      modifyId: record.id,
+      modifyId: record.goodssn,
     });
   }
   showModal = () => {
@@ -356,15 +406,20 @@ class Apppm extends Component {
       isModify: false,
     });
   }
-  handleUpload = (e) => {
-    console.log('rewrite upload:', e);
+  handleRemove = (ev) => {
+    console.log('remove upload:', ev);
+    delete this.state.filesTable[ev.uid];
+    console.log(this.state.filesTable);
+  }
+  handleUpload = (ev) => {
+    console.log('rewrite upload:', ev);
 
-    // e.onProgress({ percent: number })
+    // ev.onProgress({ percent: number })
 
     var fd = new FormData()
-    fd.append('file', e.file)
+    fd.append('file', ev.file)
 
-    fetch(e.action, {
+    fetch(ev.action, {
       method: 'POST',
       credentials: 'include',
       mode: 'cors',
@@ -373,11 +428,12 @@ class Apppm extends Component {
       .then(res => res.json())
       .then(json => {
         console.log(json)
-        e.onSuccess()
+        this.state.filesTable[ev.file.uid] = json.data[0]
+        ev.onSuccess()
       })
       .catch(e => {
         console.error(e)
-        e.onError()
+        ev.onError()
       })
   }
   handleCancel = (e) => {
@@ -393,16 +449,27 @@ class Apppm extends Component {
   handleLogout() {
     window.localStorage.userAdmin = ''
   }
-  handleDatepicker(dates, dateStrings) {
+  handleDatepicker2(dates, dateStrings) {
+    console.log(dateStrings)
     this.setState({
-      startDate: dateStrings[0].replace(/-/g, ''),
-      endDate: dateStrings[1].replace(/-/g, '')
+      // startDate: dateStrings[0].replace(/-/g, ''),
+      // endDate: dateStrings[1].replace(/-/g, ''),
+      searchStartD: new Date(dateStrings[0]).getTime(),
+      searchEndD: new Date(dateStrings[1]).getTime(),
+    }, ()=> {
+      // this.handleSearch();
+    });
+  }
+  handleDatepicker(dates, dateStrings) {
+    console.log(dateStrings)
+    this.setState({
+      begindate: new Date(dateStrings[0]).getTime(),
+      enddate: new Date(dateStrings[1]).getTime(),
     }, ()=> {
       // this.handleSearch();
     });
   }
   normFile = (e) => {
-    console.log('Upload event:', e);
     if (Array.isArray(e)) {
       return e;
     }
@@ -437,31 +504,57 @@ class Apppm extends Component {
         </Header>
         <Content style={{ margin: '24px 16px 0', textAlign: 'left' }}>
           <div style={{ padding: 24, background: '#fff', minHeight: 600 }}>
-            <span>商品名：</span><Input placeholder="input search text" style={{ width: 200, margin: '0 8px 8px 0' }}></Input>
-            <span>商品编号：</span><Input placeholder="input search text" style={{ width: 200, margin: '0 8px 8px 0' }}></Input>
-
-            <span>状态：</span>
-            <RadioGroup onChange={this.onChange} value={this.state.value}>
-              <Radio value={1}>未开始</Radio>
-              <Radio value={2}>拍卖中</Radio>
-              <Radio value={3}>已下架</Radio>
-              <Radio value={4}>拍卖结束</Radio>
-            </RadioGroup>
-
+          <Form onSubmit={this.handleSearch} layout="inline">
+            <FormItem label="商品名">
+              {getFieldDecorator('top_name', {
+                rules: [{}],
+              })(
+                <Input
+                  placeholder="null"
+                  style={{ width: 200, margin: '0 8px 8px 0' }}>
+                </Input>
+              )}
+            </FormItem>
+            <FormItem label="商品编号">
+              {getFieldDecorator('top_ssn', {
+                rules: [{}],
+              })(
+                <Input
+                  placeholder="null"
+                  style={{ width: 200, margin: '0 8px 8px 0' }}>
+                </Input>
+              )}
+            </FormItem>
+            <FormItem label="状态">
+              {getFieldDecorator('top_radio', {
+                rules: [{}],
+              })(
+                <RadioGroup>
+                  <Radio value={'before'}>未开始</Radio>
+                  <Radio value={'underway'}>竞拍中</Radio>
+                  <Radio value={'after'}>已下架</Radio>
+                  <Radio value={'soldout'}>拍卖结束</Radio>
+                </RadioGroup>
+              )}
+            </FormItem>
             <br/>
+            <FormItem label="拍卖时间">
+              {getFieldDecorator('top_date', {
+                initialValue: [moment(this.state.startDate, 'YYYY-MM-DD'), moment(this.state.endDate, 'YYYY-MM-DD')],
+              })(
+                <RangePicker
+                  showTime={true}
+                  format={'YYYY/MM/DD HH:mm:ss'}
+                  onChange={this.handleDatepicker2.bind(this)}
+                  style={{ margin: '0 8px 8px 0' }}
+                />
+              )}
+            </FormItem>
 
-            <RangePicker
-              defaultValue = {[moment(this.state.startDate, 'YYYY-MM-DD'), moment(this.state.endDate, 'YYYY-MM-DD')]}
-              format = {'YYYY-MM-DD'}
-              onChange={this.handleDatepicker.bind(this)}
-              style={{ margin: '0 8px 8px 0' }}
-            />
+            <Button onClick={this.handleSearch} type="primary" style={{ margin: '0 8px 8px 0'}}>搜索</Button>
 
-            <Button onClick={this.showModal} type="primary" style={{ margin: '0 8px 8px 0'}}>搜索</Button>
-
-            <Button onClick={this.showModal} style={{ margin: '0 8px 8px 0'}}>重置</Button>
-
-            <br/>
+            {/*<Button onClick={this.showModal} style={{ margin: '0 8px 8px 0'}}>重置</Button>*/}
+          </Form>
 
             <Button onClick={this.showModal} type="primary" style={{ margin: '0 0 12px 0'}}>添加商品</Button>
 
@@ -484,7 +577,7 @@ class Apppm extends Component {
                   {getFieldDecorator('floorprice', {
                     rules: [{ required: true, message: '请输入起拍价！' }],
                   })(
-                    <Input placeholder="起拍价" />
+                    <InputNumber min={0} max={99999} />
                   )}
                 </FormItem>
                 <FormItem label="拍卖时间" {...formItemLayout}>
@@ -493,7 +586,8 @@ class Apppm extends Component {
                     rules: [{ required: true, message: '请输入拍卖时间！' }],
                   })(
                     <RangePicker
-                      format = {'YYYY-MM-DD'}
+                      showTime={true}
+                      format={'YYYY/MM/DD HH:mm:ss'}
                       onChange={this.handleDatepicker.bind(this)}
                       style={{ margin: '0 8px 8px 0' }}
                     />
@@ -514,7 +608,47 @@ class Apppm extends Component {
                       message: '请输入正确的加价金额！'
                     }],
                   })(
-                    <Input placeholder="加价金额" />
+                    <InputNumber min={1} max={99999} />
+                  )}
+                </FormItem>
+                <FormItem label="加价金额" {...formItemLayout}>
+                  {getFieldDecorator('addmoney2', {
+                    rules: [{
+                      pattern: /^(-)?\d+(\.\d+)?$/,
+                      message: '请输入正确的加价金额！'
+                    }],
+                  })(
+                    <InputNumber min={1} max={99999} />
+                  )}
+                </FormItem>
+                <FormItem label="加价金额" {...formItemLayout}>
+                  {getFieldDecorator('addmoney3', {
+                    rules: [{
+                      pattern: /^(-)?\d+(\.\d+)?$/,
+                      message: '请输入正确的加价金额！'
+                    }],
+                  })(
+                    <InputNumber min={1} max={99999} />
+                  )}
+                </FormItem>
+                <FormItem label="加价金额" {...formItemLayout}>
+                  {getFieldDecorator('addmoney4', {
+                    rules: [{
+                      pattern: /^(-)?\d+(\.\d+)?$/,
+                      message: '请输入正确的加价金额！'
+                    }],
+                  })(
+                    <InputNumber min={1} max={99999} />
+                  )}
+                </FormItem>
+                <FormItem label="加价金额" {...formItemLayout}>
+                  {getFieldDecorator('addmoney5', {
+                    rules: [{
+                      pattern: /^(-)?\d+(\.\d+)?$/,
+                      message: '请输入正确的加价金额！'
+                    }],
+                  })(
+                    <InputNumber min={1} max={99999} />
                   )}
                 </FormItem>
                 <FormItem label="上传图片" {...formItemLayout}>
@@ -525,10 +659,10 @@ class Apppm extends Component {
                       // <input type="file"/>
                     <Upload
                       listType="picture"
-                      action={CONFIG.devURL + `/csonghengstore/images`}
+                      action={CONFIG.devURL + `/images`}
                       customRequest={this.handleUpload}
+                      onRemove={this.handleRemove}
                       beforeUpload={(file, fileList) => {
-                        console.log(fileList)
                       }}>
                       <Button>
                         <Icon type="upload" /> 点击上传

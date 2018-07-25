@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Link, Route, Switch } from 'react-router-dom'
 import '../styles/App.css';
 import Apppm from './Apppm';
-import Appqid from './Appqid';
+import Appli from './Appli';
 import Appad from './Appad';
 import Appaddetail from './Appaddetail';
 import AppPmDetail from './Apppmdetail';
@@ -65,19 +65,13 @@ class Admin extends Component {
               <Menu.Item key="1">
                 <Link to="/push/pm">
                   <Icon type="cloud" />
-                  <span className="nav-text">订单详情页</span>
+                  <span className="nav-text">商品列表</span>
                 </Link>
               </Menu.Item>
               <Menu.Item key="2">
-                <Link to="/push/qid">
+                <Link to="/push/li">
                   <Icon type="man" />
-                  <span className="nav-text">商品详情页</span>
-                </Link>
-              </Menu.Item>
-              <Menu.Item key="3">
-                <Link to="/push/ad">
-                  <Icon type="upload" />
-                  <span className="nav-text">推广管理</span>
+                  <span className="nav-text">订单列表</span>
                 </Link>
               </Menu.Item>
             </Menu>
@@ -85,7 +79,7 @@ class Admin extends Component {
           <Layout>
             <Switch>
               <Route exact path="/push/pm" component={Apppm}/>
-              <Route exact path="/push/qid" component={Appqid}/>
+              <Route exact path="/push/li" component={Appli}/>
               <Route exact path="/push/ad" component={Appad}/>
               <Route path="/push/addetail/:pid/:eid/:uid" component={Appaddetail}/>
               <Route exact path="/push/pmdetail/:pid" component={AppPmDetail}/>

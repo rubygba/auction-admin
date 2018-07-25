@@ -131,20 +131,21 @@ class Downhead extends Component {
     const menu = (
       <Menu>
         <Menu.Item>
-          <a className="ant-dropdown-link" onClick={this.showModal}>修改密码</a>
+          <a onClick={this.showModal}>修改密码</a>
         </Menu.Item>
       </Menu>
     );
 
     return (
       <div style={{ float: 'right', lineHeight: '1.4' }}>
-        <Dropdown overlay={menu}>
           <p>
             <span style={{ marginRight: '12px' }}>{this.state.userInfo.userName} - {adminName}</span>
-            <Link to='/push' onClick={this.handleLogout}>注销 <Icon type="down" /></Link>
+            <Link to='/login' onClick={this.handleLogout}>注销 <Icon type="down" /></Link>
           </p>
-        </Dropdown>
         {/*
+        <Dropdown overlay={menu}>
+          <a className="ant-dropdown-link" onClick={this.showModal}>修改密码</a>
+        </Dropdown>
           <span style={{ marginRight: '12px' }}>{this.state.userInfo.userName} - {adminName}</span>
           <Link to='/login' onClick={this.handleLogout}>注销</Link>
         */}

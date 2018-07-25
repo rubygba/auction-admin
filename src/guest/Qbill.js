@@ -155,6 +155,7 @@ class QBill extends Component {
     if (this.state.userInfo.accountType && this.state.userInfo.accountType === 1) {
       adminName = '管理员'
     }
+
     return (
       <div>
         <Header style={{ background: '#fff', padding: '20px', textAlign: 'left' }}>
