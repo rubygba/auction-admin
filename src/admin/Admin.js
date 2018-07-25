@@ -33,7 +33,7 @@ class Admin extends Component {
     //   this.props.history.replace('/push')
     // } else {
     //   this.state.userInfo = JSON.parse(window.localStorage.userAdmin || 'null')
-    //   this.props.history.replace('/push/pm')
+      this.props.history.replace('/push/pm')
     // }
   }
 

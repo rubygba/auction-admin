@@ -20,6 +20,5 @@
     "build": "react-app-rewired build",
     "test": "react-app-rewired test --env=jsdom",
     "eject": "react-app-rewired eject"
-  },
-  "proxy": "http://172.18.254.19"
+  }
 }

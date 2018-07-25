@@ -1,4 +1,4 @@
 export default {
-  devURL: '//172.18.254.19',
+  devURL: '//test01.songheng.com',
   // devURL: '//promotion.mop.com',
 }

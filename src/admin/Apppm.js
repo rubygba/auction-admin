@@ -119,10 +119,10 @@ class Apppm extends Component {
   getData = () => {
     let _token = window.localStorage.tokenAdmin
     // fetch(CONFIG.devURL + `/songhengstore/goods/getgoods?goodstitle=${'商品标题'}&goodssn=${'商品编号'}&begindate=${'竞拍开始时间'}&enddate=${'竞拍结束时间'}&before=${'未开始'}&underway=${'竞拍中'}&after=${'已结束'}&soldout=${'已下架'}`, {
-    fetch(`/csonghengstore/goods/getgoods`, {
+    fetch(CONFIG.devURL + `/csonghengstore/goods/getgoods`, {
       method: 'GET',
       credentials: 'include',
-      // mode: 'cors'
+      mode: 'cors'
     })
       .then(res => {
         if (res.json) {
@@ -168,100 +168,118 @@ class Apppm extends Component {
           _pre = '/product/update?id=' + this.state.modifyId + '&'
         }
 
-        // 创建新产品
-        fetch(CONFIG.devURL + `${_pre}productName=${values.productName}&extensionStatus=${values.extensionStatus}&token=${_token}`, {
-          method: 'GET',
+        var fd = new FormData()
+        fd.append('file', values.imgs[0].originFileObj)
+
+        fetch(CONFIG.devURL + `/csonghengstore/images`, {
+          method: 'POST',
           credentials: 'include',
-          mode: 'cors'
+          mode: 'cors',
+          body: fd
         })
           .then(res => res.json())
           .then(json => {
             console.log(json)
-            if (json.code === 200) {
-              // TODO:
-              let d = json.data // json.data为id返回
-              if (d) {
-                // 创建/修改成功，开始上传apk
-                if (this.state.isModify) {
-                  if (!values.upload || values.upload.length < 1) {
-                    // 停止后续修改
-                    this.getData()
-                    this.setState({
-                      okText: 'OK',
-                      uploading: false,
-                      isModal: false,
-                    })
-                    return
-                  }
-                  d = this.state.modifyId
-                }
-
-                var fd = new FormData()
-                fd.append('productId', d)
-                fd.append('uploadFile', values.upload[0].originFileObj)
-
-                // 上传apk
-                fetch(CONFIG.devURL + `/api/upload?token=${_token}`, {
-                  method: 'POST',
-                  body: fd,
-                  mode: 'cors',
-                  credentials: 'include'
-                })
-                  .then(res => res.json())
-                  .then(json => {
-                    console.log(json)
-                    if (json.code === '200') {
-                      // 上传成功，更新上传包
-                      fetch(CONFIG.devURL + `/api/applyChannelPkg?productId=${d}&token=${_token}`, {
-                        method: 'GET',
-                        credentials: 'include',
-                        mode: 'cors'
-                      })
-                        .then(res => res.json())
-                        .then(json => {
-                          console.log(json)
-                          if (json.code === 200) {
-                            // let d = json.data
-                            // if (d) {
-                              // 修改成功
-                            // }
-                          } else {
-                          }
-                          alert(json.msg)
-                          this.getData()
-                        })
-                        .catch(e => {
-                          alert(e)
-                          this.getData()
-                        })
-                    }
-                    // alert(json.msg)
-
-                    this.setState({
-                      okText: 'OK',
-                      uploading: false,
-                      isModal: false,
-                    })
-                  })
-                  .catch(e => {
-                    alert(e)
-                  })
-              }
-            } else {
-              this.setState({
-                okText: 'OK',
-                uploading: false,
-              })
-              alert(json.msg)
-            }
           })
           .catch(e => {
-            this.setState({
-              okText: 'OK',
-              uploading: false,
-            })
-            alert(e)
+            console.error(e)
           })
+
+
+        // 创建新产品
+        // fetch(CONFIG.devURL + `${_pre}productName=${values.productName}&extensionStatus=${values.extensionStatus}&token=${_token}`, {
+        //   method: 'GET',
+        //   credentials: 'include',
+        //   mode: 'cors'
+        // })
+        //   .then(res => res.json())
+        //   .then(json => {
+        //     console.log(json)
+        //     if (json.code === 200) {
+        //       // TODO:
+        //       let d = json.data // json.data为id返回
+        //       if (d) {
+        //         // 创建/修改成功，开始上传apk
+        //         if (this.state.isModify) {
+        //           if (!values.upload || values.upload.length < 1) {
+        //             // 停止后续修改
+        //             this.getData()
+        //             this.setState({
+        //               okText: 'OK',
+        //               uploading: false,
+        //               isModal: false,
+        //             })
+        //             return
+        //           }
+        //           d = this.state.modifyId
+        //         }
+
+        //         var fd = new FormData()
+        //         fd.append('productId', d)
+        //         fd.append('uploadFile', values.upload[0].originFileObj)
+
+        //         // 上传apk
+        //         fetch(CONFIG.devURL + `/api/upload?token=${_token}`, {
+        //           method: 'POST',
+        //           body: fd,
+        //           mode: 'cors',
+        //           credentials: 'include'
+        //         })
+        //           .then(res => res.json())
+        //           .then(json => {
+        //             console.log(json)
+        //             if (json.code === '200') {
+        //               // 上传成功，更新上传包
+        //               fetch(CONFIG.devURL + `/api/applyChannelPkg?productId=${d}&token=${_token}`, {
+        //                 method: 'GET',
+        //                 credentials: 'include',
+        //                 mode: 'cors'
+        //               })
+        //                 .then(res => res.json())
+        //                 .then(json => {
+        //                   console.log(json)
+        //                   if (json.code === 200) {
+        //                     // let d = json.data
+        //                     // if (d) {
+        //                       // 修改成功
+        //                     // }
+        //                   } else {
+        //                   }
+        //                   alert(json.msg)
+        //                   this.getData()
+        //                 })
+        //                 .catch(e => {
+        //                   alert(e)
+        //                   this.getData()
+        //                 })
+        //             }
+        //             // alert(json.msg)
+
+        //             this.setState({
+        //               okText: 'OK',
+        //               uploading: false,
+        //               isModal: false,
+        //             })
+        //           })
+        //           .catch(e => {
+        //             alert(e)
+        //           })
+        //       }
+        //     } else {
+        //       this.setState({
+        //         okText: 'OK',
+        //         uploading: false,
+        //       })
+        //       alert(json.msg)
+        //     }
+        //   })
+        //   .catch(e => {
+        //     this.setState({
+        //       okText: 'OK',
+        //       uploading: false,
+        //     })
+        //     alert(e)
+        //   })
       }
     });
   }
@@ -299,8 +317,7 @@ class Apppm extends Component {
       })
   }
   updateApk = (record) => {
-    let _token = window.localStorage.tokenAdmin
-    fetch(CONFIG.devURL + `/api/applyChannelPkg?productId=${record.id}&id=${record.id}&token=${_token}`, {
+    fetch(CONFIG.devURL + `/songhengstore/images`, {
       method: 'GET',
       credentials: 'include',
       mode: 'cors'
@@ -338,6 +355,30 @@ class Apppm extends Component {
       modalTitle: '新建产品',
       isModify: false,
     });
+  }
+  handleUpload = (e) => {
+    console.log('rewrite upload:', e);
+
+    // e.onProgress({ percent: number })
+
+    var fd = new FormData()
+    fd.append('file', e.file)
+
+    fetch(e.action, {
+      method: 'POST',
+      credentials: 'include',
+      mode: 'cors',
+      body: fd
+    })
+      .then(res => res.json())
+      .then(json => {
+        console.log(json)
+        e.onSuccess()
+      })
+      .catch(e => {
+        console.error(e)
+        e.onError()
+      })
   }
   handleCancel = (e) => {
     console.log(e);
@@ -433,25 +474,25 @@ class Apppm extends Component {
             >
               <Form onSubmit={this.handleSubmit} className="login-form">
                 <FormItem label="商品名" {...formItemLayout}>
-                  {getFieldDecorator('productName', {
+                  {getFieldDecorator('goodstitle', {
                     rules: [{ required: true, message: '请输入商品名！' }],
                   })(
                     <Input placeholder="商品名" />
                   )}
                 </FormItem>
                 <FormItem label="起拍价" {...formItemLayout}>
-                  {getFieldDecorator('productName', {
+                  {getFieldDecorator('floorprice', {
                     rules: [{ required: true, message: '请输入起拍价！' }],
                   })(
                     <Input placeholder="起拍价" />
                   )}
                 </FormItem>
                 <FormItem label="拍卖时间" {...formItemLayout}>
-                  {getFieldDecorator('productName', {
-                    rules: [{ required: true, message: '请输入商品名！' }],
+                  {getFieldDecorator('alldate', {
+                    initialValue: [moment(this.state.startDate, 'YYYY-MM-DD'), moment(this.state.endDate, 'YYYY-MM-DD')],
+                    rules: [{ required: true, message: '请输入拍卖时间！' }],
                   })(
                     <RangePicker
-                      defaultValue = {[moment(this.state.startDate, 'YYYY-MM-DD'), moment(this.state.endDate, 'YYYY-MM-DD')]}
                       format = {'YYYY-MM-DD'}
                       onChange={this.handleDatepicker.bind(this)}
                       style={{ margin: '0 8px 8px 0' }}
@@ -459,27 +500,36 @@ class Apppm extends Component {
                   )}
                 </FormItem>
                 <FormItem label="描述" {...formItemLayout}>
-                  {getFieldDecorator('comment', {
-                    initialValue: '品牌：型号：CPU：显卡：内存：分辨率：操作系统：新旧程度：'
+                  {getFieldDecorator('goodsdesc', {
+                    initialValue: '品牌：\r型号：\rCPU：\r显卡：\r内存：\r分辨率：\r操作系统：\r新旧程度：'
                   })(
                     <TextArea placeholder="" autosize={{ minRows: 6, maxRows: 12 }} />
                   )}
                 </FormItem>
                 <FormItem label="加价金额" {...formItemLayout}>
-                  {getFieldDecorator('productName', {
-                    rules: [{ required: true, message: '请输入加价金额！' }],
+                  {getFieldDecorator('addmoney', {
+                    rules: [{
+                      required: true,
+                      pattern: /^(-)?\d+(\.\d+)?$/,
+                      message: '请输入正确的加价金额！'
+                    }],
                   })(
                     <Input placeholder="加价金额" />
                   )}
                 </FormItem>
                 <FormItem label="上传图片" {...formItemLayout}>
-                  {getFieldDecorator('upload', {
+                  {getFieldDecorator('imgs', {
                     valuePropName: 'fileList',
                     getValueFromEvent: this.normFile,
-                    rules: [{ required: !this.state.isModify, message: '请上传图片！' }],
                   })(
                       // <input type="file"/>
-                    <Upload beforeUpload={() => {return false}}>
+                    <Upload
+                      listType="picture"
+                      action={CONFIG.devURL + `/csonghengstore/images`}
+                      customRequest={this.handleUpload}
+                      beforeUpload={(file, fileList) => {
+                        console.log(fileList)
+                      }}>
                       <Button>
                         <Icon type="upload" /> 点击上传
                       </Button>
