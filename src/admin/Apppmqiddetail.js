@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import { Link, Route } from 'react-router-dom'
 import CONFIG from '../common/config';
+import { getFormatDate, getFormatDate2 } from '../common/tools';
 
-import { Layout, Breadcrumb, Menu, Icon, LocaleProvider, DatePicker, message, Button, Table, Input, Modal, Radio, Form, Upload } from 'antd';
+import { Layout, Breadcrumb, Menu, Icon, LocaleProvider, DatePicker, message, Button, Table, Input, InputNumber, Modal, Radio, Form, Upload } from 'antd';
 import Downhead from './Downhead'
 
 // 由于 antd 组件的默认文案是英文，所以需要修改为中文
@@ -14,6 +15,7 @@ moment.locale('zh-cn');
 const { Header, Content, Footer, Sider } = Layout;
 const RangePicker = DatePicker.RangePicker;
 const Search = Input.Search;
+const TextArea = Input.TextArea;
 const FormItem = Form.Item;
 const RadioGroup = Radio.Group;
 
@@ -21,100 +23,111 @@ class Apppm extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      searchName: '',
+
+      startDate: getFormatDate(0, -1),
+      endDate: getFormatDate(0),
       userInfo: {},
-      nowPmName: '',
       isModal: false,
+      isModify: false,
+      modifyId: '',
       date: '',
       uploading: false,
+      okText: 'OK',
+
       pagination: {
         // 封装的分页
         total: 10,
         defaultPageSize: 10,
       },
       columns: [{
-        title: '日期',
-        dataIndex: 'dt',
-      // }, {
-      //   title: '产品名',
-      //   dataIndex: 'productName',
-      //   render: text => <span>{text + ''}</span>
+        title: '商品名',
+        dataIndex: 'goods',
+        render: (text, record) => <span>{record.goods.goodsTitle}</span>
       }, {
-        title: '渠道名',
-        dataIndex: 'qid',
-        render: text => <span>{text + ''}</span>
+        title: '参与者',
+        dataIndex: 'userName',
       }, {
-        title: '安装数',
-        dataIndex: 'newUser',
+        title: '出价',
+        dataIndex: 'goodsMoney',
       }, {
-        title: '注册数',
-        dataIndex: 'newRegister',
+        title: '订单编号',
+        dataIndex: 'orderNo',
       }, {
-        title: '注册率',
-        dataIndex: 'registerRate',
+        title: '状态',
+        dataIndex: 'orderStatus',
+        render: (text) => <span>{text}</span>
       }, {
-        title: '充值人数',
-        dataIndex: 'dayChargeNum',
+        title: '订单时间',
+        dataIndex: 'createTime',
       }, {
-        title: '充值金额/元',
-        dataIndex: 'dayChargeMoney',
-      // }, {
-      //   title: '结算金额/元',
-      //   dataIndex: 'settleAccounts',
-      // }, {
-      //   title: 'Action',
-      //   key: 'action',
-      //   render: (text, record) => (
-      //     <span>
-      //       <a href="javascript:;">Action 一 {record.name}</a>
-      //       <a href="javascript:;" className="ant-dropdown-link">
-      //         More actions <Icon type="down" />
-      //       </a>
-      //     </span>
-      //   ),
-      }],
-      dataArr: [
-        {
-          "id": 1,
-          "productId": "001",
-          "productName": "猫扑小说安卓",
-          "extensionStatus": 1,
-          "urlPrefix": "http://www.shareinstall.com/demo.html?appkey=7FBKAE6B22FK6E&channel=Mop00001",
-          "createTime": 1528182178000,
-          "updateTime": null
-        },
-        {
-          "id": 2,
-          "productId": "002",
-          "productName": "猫扑小说ios",
-          "extensionStatus": 2,
-          "urlPrefix": "http://www.shareinstall.com/demo.html?appkey=7FBKAE6B22FK6E&channel=Mop00002",
-          "createTime": 1528278533000,
-          "updateTime": 1528278585000
-        }
-      ],
+        title: '商品编号',
+        dataIndex: 'goodsSn',
+      }, {
+        title: '操作',
+        dataIndex: 'createTime',
+        render: (text, record) => (
+          <div>
+            <Button type="primary" style={{margin: '0 8px 0 0'}}>出价记录</Button>
+          </div>),
+        }],
+      dataArr: [],
     };
 
-    if (!window.localStorage.userAdmin) {
-      this.props.history.replace('/login')
-    } else {
-      this.state.userInfo = JSON.parse(window.localStorage.userAdmin || 'null')
-    }
+    // if (!window.localStorage.userAdmin) {
+    //   this.props.history.replace('/login')
+    // } else {
+    //   this.state.userInfo = JSON.parse(window.localStorage.userAdmin || 'null')
+    // }
   }
 
   componentDidMount() {
+    this.getData()
+  }
+
+  getData = () => {
     let _token = window.localStorage.tokenAdmin
-    let _pid = this.props.match.params.pid
-    let _date = this.props.match.params.date
-    let _qid = 'all'
-
-    if (window.localStorage.pmname) {
-      let _t = window.localStorage.pmname
-      this.setState({
-        nowPmName: _t
+    // fetch(CONFIG.devURL + `/songhengstore/goods/getgoods?goodstitle=${'商品标题'}&goodssn=${'商品编号'}&begindate=${'竞拍开始时间'}&enddate=${'竞拍结束时间'}&before=${'未开始'}&underway=${'竞拍中'}&after=${'已结束'}&soldout=${'已下架'}`, {
+    fetch(CONFIG.devURL + `/order/getOrdersByGoodsSn?goodsSn=${this.props.match.params.pid}`, {
+      method: 'GET',
+      credentials: 'include',
+      mode: 'cors'
+    })
+      .then(res => {
+        if (res.json) {
+          return res.json()
+        } else {
+          return {}
+        }
       })
+      .then(json => {
+        console.log(json)
+        let d = json.data
+        this.setState({
+          dataArr: d,
+          pagination: {
+            // 封装的分页
+            total: d.length,
+            defaultPageSize: 20,
+          },
+        })
+      })
+      .catch(e => {
+        console.error(e)
+      })
+  }
+  setPmName = (record) => {
+    window.localStorage.pmname = record.productName
+  }
+  updateRecord = (record) => {
+    let _token = window.localStorage.tokenAdmin
+    let _eStatus = record.extensionStatus
+    if (_eStatus === 1) {
+      _eStatus = 0
+    } else if (_eStatus === 0) {
+      _eStatus = 1
     }
-
-    fetch(CONFIG.devURL + `/extensionData/qidData?productId=${_pid}&startDate=${_date}&endDate=${_date}&pageNo=${1}&pageSize=${100}&qid=${_qid}&token=${_token}`, {
+    fetch(CONFIG.devURL + `/product/update?productId=${record.productId || ''}&id=${record.id}&productName=${record.productName}&extensionStatus=${_eStatus}&token=${_token}`, {
       method: 'GET',
       credentials: 'include',
       mode: 'cors'
@@ -124,73 +137,117 @@ class Apppm extends Component {
         console.log(json)
         if (json.code === 200) {
           let d = json.data
-          if (d.entityList) {
-            this.setState({
-              dataArr: d.entityList,
-              pagination: {
-                // 封装的分页
-                total: d.entityList.length,
-                defaultPageSize: 10,
-              },
-            })
+          if (d) {
+            // 修改成功
+            this.getData()
           }
-        } else if (json.code === 403) {
-          // token过期
-          window.localStorage.userAdmin = ''
-          this.props.history.push('/');
         } else {
           alert(json.msg)
         }
       })
+      .catch(e => {
+        alert(e)
+      })
   }
+  sendPm = (record) => {
+    fetch(CONFIG.devURL + `/order/deliverGoods?orderNo=${record.orderNo}&goodsSn=${record.goodssn}`, {
+      method: 'GET',
+      credentials: 'include',
+      mode: 'cors'
+    })
+      .then(res => res.json())
+      .then(json => {
+        console.log(json)
+        this.getData()
+        alert(json.message)
+      })
+      .catch(e => {
+        alert(e)
+      })
+  }
+  showModModal = (record) => {
+    console.log(record)
+    this.props.form.setFieldsValue({
+      id: record.id,
+      productName: record.productName,
+      extensionStatus: record.extensionStatus,
+    })
+    this.setState({
+      isModal: true,
+      modalTitle: '更新产品信息',
+      isModify: true,
+      modifyId: record.id,
+    });
+  }
+  showModal = () => {
+    this.setState({
+      isModal: true,
+      modalTitle: '新建产品',
+      isModify: false,
+    });
+  }
+  handleUpload = (ev) => {
+    console.log('rewrite upload:', ev);
 
-  // handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   this.props.form.validateFields((err, values) => {
-  //     if (!err) {
-  //       console.log('Received values of form: ', values);
-  //       let _token = window.localStorage.tokenAdmin
-  //       fetch(CONFIG.devURL + `/product/add?productName=${values.productName}&extensionStatus=${values.extensionStatus}&token=${_token}`, {
-  //         method: 'GET',
-  //         credentials: 'include',
-  //         mode: 'cors'
-  //       })
-  //         .then(res => res.json())
-  //         .then(json => {
-  //           console.log(json)
-  //           if (json.code === 200) {
-  //             let d = json.data
-  //             console.log(json);
-  //             if (d) {
-  //               // 创建成功
-  //               this.setState({
-  //                 isModal: false,
-  //               });
-  //             }
-  //           } else {
-  //             alert(json.msg)
-  //           }
-  //         })
-  //     }
-  //   });
-  // }
-  // showModal = () => {
-  //   this.setState({
-  //     isModal: true,
-  //   });
-  // }
-  // handleCancel = (e) => {
-  //   console.log(e);
-  //   this.setState({
-  //     isModal: false,
-  //   });
-  // }
+    // ev.onProgress({ percent: number })
+
+    var fd = new FormData()
+    fd.append('file', ev.file)
+
+    fetch(ev.action, {
+      method: 'POST',
+      credentials: 'include',
+      mode: 'cors',
+      body: fd
+    })
+      .then(res => res.json())
+      .then(json => {
+        console.log(json)
+        ev.onSuccess()
+      })
+      .catch(e => {
+        console.error(e)
+        ev.onError()
+      })
+  }
+  handleCancel = (e) => {
+    console.log(e);
+    this.setState({
+      isModal: false,
+    });
+  }
   handleChange(date) {
     message.info('您选择的日期是: ' + (date ? date.toString() : ''));
     this.setState({ date });
   }
   handleLogout() {
     window.localStorage.userAdmin = ''
+  }
+  handleDatepicker2(dates, dateStrings) {
+    console.log(dateStrings)
+    this.setState({
+      startDate: dateStrings[0].replace(/-/g, ''),
+      endDate: dateStrings[1].replace(/-/g, ''),
+      begindate: new Date(dateStrings[0]).getTime(),
+      enddate: new Date(dateStrings[1]).getTime(),
+    }, ()=> {
+      // this.handleSearch();
+    });
+  }
+  handleDatepicker(dates, dateStrings) {
+    console.log(dateStrings)
+    this.setState({
+      begindate: new Date(dateStrings[0]).getTime(),
+      enddate: new Date(dateStrings[1]).getTime(),
+    }, ()=> {
+      // this.handleSearch();
+    });
+  }
+  normFile = (e) => {
+    if (Array.isArray(e)) {
+      return e;
+    }
+    return e && e.fileList;
   }
   render() {
     const { getFieldDecorator } = this.props.form;
@@ -199,69 +256,29 @@ class Apppm extends Component {
       adminName = '管理员'
     }
 
+    const formItemLayout = {
+      labelCol: {
+        xs: { span: 12 },
+        sm: { span: 6 },
+      },
+      wrapperCol: {
+        xs: { span: 36 },
+        sm: { span: 18 },
+      },
+    };
+
     return (
       <div>
         <Header style={{ background: '#fff', padding: '20px', textAlign: 'left' }}>
           <Downhead></Downhead>
           <Breadcrumb>
             <Breadcrumb.Item>Home</Breadcrumb.Item>
-            <Breadcrumb.Item><Link to="/push/pm">产品管理</Link></Breadcrumb.Item>
-            <Breadcrumb.Item><Link to={`/push/pmdetail/${this.props.match.params.pid}`}>{this.state.nowPmName || this.props.match.params.pid}</Link></Breadcrumb.Item>
-            <Breadcrumb.Item>{this.props.match.params.date}单日数据</Breadcrumb.Item>
+            <Breadcrumb.Item><a href="">商品搜索</a></Breadcrumb.Item>
           </Breadcrumb>
         </Header>
         <Content style={{ margin: '24px 16px 0', textAlign: 'left' }}>
           <div style={{ padding: 24, background: '#fff', minHeight: 600 }}>
-            {/*
-            <Button onClick={this.showModal} type="primary" style={{ margin: '0 0 12px 0'}}>新建产品</Button>
-            <Modal
-              title="新建产品"
-              visible={this.state.isModal}
-              onOk={this.handleSubmit}
-              onCancel={this.handleCancel}
-            >
-              <Form onSubmit={this.handleSubmit} className="login-form">
-                <FormItem label="产品名称">
-                  {getFieldDecorator('productName', {
-                    rules: [{ required: true, message: '请输入产品名！' }],
-                  })(
-                    <Input placeholder="产品名" />
-                  )}
-                </FormItem>
-                <FormItem label="基本包">
-                  {getFieldDecorator('upload', {
-                    rules: [{ required: true, message: '请上传基本包！' }],
-                  })(
-                    <Upload beforeUpload={() => {return false}}>
-                      <Button>
-                        <Icon type="upload" /> 点击上传
-                      </Button>
-                    </Upload>
-                  )}
-                </FormItem>
-                <FormItem label="推广状态">
-                  {getFieldDecorator('extensionStatus', {
-                    initialValue: '1'
-                  })(
-                    <RadioGroup>
-                      <Radio value="1">开启</Radio>
-                      <Radio value="2">关闭</Radio>
-                    </RadioGroup>
-                  )}
-                </FormItem>
-              </Form>
-            </Modal>
-            */}
-            <Table rowKey="createTime" columns={this.state.columns} dataSource={this.state.dataArr} pagination={this.state.pagination} />
-{/*
-            <LocaleProvider locale={zhCN}>
-              <div style={{ width: 400, margin: '100px auto' }}>
-                <DatePicker onChange={value => this.handleChange(value)} />
-                <div style={{ marginTop: 20 }}>当前日期：{this.state.date && this.state.date.toString()}</div>
-              </div>
-            </LocaleProvider>
-            <Button type="primary">Button</Button>
-            */}
+            <Table rowKey="id" columns={this.state.columns} dataSource={this.state.dataArr} pagination={this.state.pagination} />
           </div>
         </Content>
       </div>

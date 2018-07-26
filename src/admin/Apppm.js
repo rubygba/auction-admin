@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Link, Route } from 'react-router-dom'
 import CONFIG from '../common/config';
-import { getFormatDate, getFormatDate2 } from '../common/tools';
+import { getFormatDate, getFormatDate2, getFormatDate3 } from '../common/tools';
 
 import { Layout, Breadcrumb, Menu, Icon, LocaleProvider, DatePicker, message, Button, Table, Input, InputNumber, Modal, Radio, Form, Upload } from 'antd';
 import Downhead from './Downhead'
@@ -66,9 +66,11 @@ class Apppm extends Component {
       }, {
         title: '开始时间',
         dataIndex: 'begindate',
+        render: (text) => <span>{getFormatDate3(text)}</span>
       }, {
         title: '结束时间',
         dataIndex: 'enddate',
+        render: (text) => <span>{getFormatDate3(text)}</span>
       }, {
         title: '操作',
         dataIndex: 'createTime',
@@ -76,7 +78,7 @@ class Apppm extends Component {
           <div>
             <Button onClick={this.showModModal.bind(this, record)} type="primary" style={{margin: '0 8px 0 0'}}>编辑</Button>
             <Link to={`/push/pmdetail/${record.goodssn}`}><Button onClick={this.setPmName.bind(this, record)} style={{margin: '0 8px 0 0'}}>查看商品</Button></Link>
-            <Link to={`/push/pmqiddetail/${record.goodssn}`}><Button onClick={this.updateApk.bind(this, record)} style={{margin: '0 8px 0 0'}}>查看订单</Button></Link>
+            <Link to={`/push/pmqiddetail/${record.goodssn}`}><Button style={{margin: '0 8px 0 0'}}>查看订单</Button></Link>
             <Button onClick={this.deletePm.bind(this, record)}>强制下架</Button>
           </div>),
         }],
@@ -106,6 +108,7 @@ class Apppm extends Component {
         if (res.json) {
           return res.json()
         } else {
+          this.props.history.replace('/login') // cookie过期，跳转登录
           return {}
         }
       })
@@ -158,10 +161,10 @@ class Apppm extends Component {
 
         console.log('Received values of form: ', values);
         // let _token = window.localStorage.tokenAdmin
-        // let _pre = '/product/add?'
-        // if (this.state.isModify) {
-        //   _pre = '/product/update?id=' + this.state.modifyId + '&'
-        // }
+        let _pre = '/goods/addgoods?'
+        if (this.state.isModify) {
+          _pre = '/goods/editGoods?goodsSn=' + this.state.modifyId + '&'
+        }
 
         // 处理图片上传
         let imgStr = []
@@ -183,7 +186,7 @@ class Apppm extends Component {
         if (values.addmoney5) addStr.push(values.addmoney5)
         addStr = addStr.join(',')
 
-        fetch(CONFIG.devURL + `/goods/addgoods?goodstitle=${values.goodstitle}&goodstitle=${values.goodstitle}&goodsdesc=${values.goodsdesc}&floorprice=${values.floorprice}&begindate=${this.state.begindate}&enddate=${this.state.enddate}&imgs=${imgStr}&addmoney=${addStr}`, {
+        fetch(CONFIG.devURL + _pre + `goodstitle=${values.goodstitle}&goodsdesc=${values.goodsdesc}&floorprice=${values.floorprice}&begindate=${this.state.begindate}&enddate=${this.state.enddate}&imgs=${imgStr}&addmoney=${addStr}`, {
           method: 'GET',
           credentials: 'include',
           mode: 'cors'
@@ -383,12 +386,21 @@ class Apppm extends Component {
           thumbUrl: record.imgs[i]
         }
         _imgs.push(temp)
+        // 处理图片上传
+        this.filesTable[-(i + 1)] = record.imgs[i]
       }
     }
 
     this.props.form.setFieldsValue({
       goodstitle: record.goodstitle,
       floorprice: record.floorprice,
+      // alldate: '',
+      // 处理加价金额
+      addmoney: record.addmoney[0] || '',
+      addmoney2: record.addmoney[1] || '',
+      addmoney3: record.addmoney[2] || '',
+      addmoney4: record.addmoney[3] || '',
+      addmoney5: record.addmoney[4] || '',
       goodsdesc: record.goodsdesc,
       imgs: _imgs
     })
@@ -397,6 +409,9 @@ class Apppm extends Component {
       modalTitle: '更新商品信息',
       isModify: true,
       modifyId: record.goodssn,
+      // 处理日期
+      begindate: record.begindate,
+      enddate: record.enddate,
     });
   }
   showModal = () => {
@@ -532,8 +547,8 @@ class Apppm extends Component {
                 <RadioGroup>
                   <Radio value={'before'}>未开始</Radio>
                   <Radio value={'underway'}>竞拍中</Radio>
-                  <Radio value={'after'}>已下架</Radio>
-                  <Radio value={'soldout'}>拍卖结束</Radio>
+                  <Radio value={'soldout'}>已下架</Radio>
+                  <Radio value={'after'}>已结束</Radio>
                 </RadioGroup>
               )}
             </FormItem>
@@ -653,6 +668,7 @@ class Apppm extends Component {
                 </FormItem>
                 <FormItem label="上传图片" {...formItemLayout}>
                   {getFieldDecorator('imgs', {
+                    required: true,
                     valuePropName: 'fileList',
                     getValueFromEvent: this.normFile,
                   })(

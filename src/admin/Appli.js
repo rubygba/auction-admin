@@ -24,6 +24,10 @@ class Apppm extends Component {
     super(props);
     this.state = {
       searchName: '',
+      goodsSn: '',
+      orderNo: '',
+      userName: '',
+      orderStatus: '',
 
       startDate: getFormatDate(0, -1),
       endDate: getFormatDate(0),
@@ -56,6 +60,7 @@ class Apppm extends Component {
       }, {
         title: '状态',
         dataIndex: 'orderStatus',
+        render: (text) => <span>{text}</span>
       }, {
         title: '订单时间',
         dataIndex: 'createTime',
@@ -68,7 +73,7 @@ class Apppm extends Component {
         render: (text, record) => (
           <div>
             <Button onClick={this.showModModal.bind(this, record)} type="primary" style={{margin: '0 8px 0 0'}}>出价记录</Button>
-            <Link to={`/push/pmdetail/${record.goodssn}`}><Button onClick={this.setPmName.bind(this, record)} style={{margin: '0 8px 0 0'}}>发货</Button></Link>
+            <Button onClick={this.sendPm.bind(this, record)} style={{margin: '0 8px 0 0'}}>发货</Button>
           </div>),
         }],
       dataArr: [],
@@ -88,7 +93,7 @@ class Apppm extends Component {
   getData = () => {
     let _token = window.localStorage.tokenAdmin
     // fetch(CONFIG.devURL + `/songhengstore/goods/getgoods?goodstitle=${'商品标题'}&goodssn=${'商品编号'}&begindate=${'竞拍开始时间'}&enddate=${'竞拍结束时间'}&before=${'未开始'}&underway=${'竞拍中'}&after=${'已结束'}&soldout=${'已下架'}`, {
-    fetch(CONFIG.devURL + `/order/queryOrders?userName=&orderNo=&goodsSn=&orderStatus=`, {
+    fetch(CONFIG.devURL + `/order/queryOrders?userName=${this.state.userName}&orderNo=${this.state.orderNo}&goodsSn=${this.state.goodsSn}&orderStatus=${this.state.orderStatus}`, {
       method: 'GET',
       credentials: 'include',
       mode: 'cors'
@@ -116,141 +121,19 @@ class Apppm extends Component {
         console.error(e)
       })
   }
-  handleSubmit = (e) => {
+  handleSearch = (e) => {
     e.preventDefault();
 
-    // if (this.state.uploading) {
-    //   return
-    // }
-
     this.props.form.validateFields((err, values) => {
-      if (!err) {
-        this.setState({
-          okText: 'Loading...',
-          uploading: true,
-        })
-
-        console.log('Received values of form: ', values);
-        // let _token = window.localStorage.tokenAdmin
-        // let _pre = '/product/add?'
-        // if (this.state.isModify) {
-        //   _pre = '/product/update?id=' + this.state.modifyId + '&'
-        // }
-
-        fetch(CONFIG.devURL + `/goods/addgoods?goodstitle=${values.goodstitle}&goodstitle=${values.goodstitle}&goodsdesc=${values.goodsdesc}&floorprice=${values.floorprice}&begindate=${this.state.begindate}&enddate=${this.state.enddate}&imgs=${values.imgs}&addmoney=${values.addmoney}`, {
-          method: 'GET',
-          credentials: 'include',
-          mode: 'cors'
-        })
-          .then(res => res.json())
-          .then(json => {
-            console.log(json)
-            this.getData()
-            this.setState({
-              okText: 'OK',
-              uploading: false,
-              isModal: false,
-            })
-          })
-          .catch(e => {
-            alert(e)
-          })
-
-        // 创建新产品
-        // fetch(CONFIG.devURL + `${_pre}productName=${values.productName}&extensionStatus=${values.extensionStatus}&token=${_token}`, {
-        //   method: 'GET',
-        //   credentials: 'include',
-        //   mode: 'cors'
-        // })
-        //   .then(res => res.json())
-        //   .then(json => {
-        //     console.log(json)
-        //     if (json.code === 200) {
-        //       // TODO:
-        //       let d = json.data // json.data为id返回
-        //       if (d) {
-        //         // 创建/修改成功，开始上传apk
-        //         if (this.state.isModify) {
-        //           if (!values.upload || values.upload.length < 1) {
-        //             // 停止后续修改
-        //             this.getData()
-        //             this.setState({
-        //               okText: 'OK',
-        //               uploading: false,
-        //               isModal: false,
-        //             })
-        //             return
-        //           }
-        //           d = this.state.modifyId
-        //         }
-
-        //         var fd = new FormData()
-        //         fd.append('productId', d)
-        //         fd.append('uploadFile', values.upload[0].originFileObj)
-
-        //         // 上传apk
-        //         fetch(CONFIG.devURL + `/api/upload?token=${_token}`, {
-        //           method: 'POST',
-        //           body: fd,
-        //           mode: 'cors',
-        //           credentials: 'include'
-        //         })
-        //           .then(res => res.json())
-        //           .then(json => {
-        //             console.log(json)
-        //             if (json.code === '200') {
-        //               // 上传成功，更新上传包
-        //               fetch(CONFIG.devURL + `/api/applyChannelPkg?productId=${d}&token=${_token}`, {
-        //                 method: 'GET',
-        //                 credentials: 'include',
-        //                 mode: 'cors'
-        //               })
-        //                 .then(res => res.json())
-        //                 .then(json => {
-        //                   console.log(json)
-        //                   if (json.code === 200) {
-        //                     // let d = json.data
-        //                     // if (d) {
-        //                       // 修改成功
-        //                     // }
-        //                   } else {
-        //                   }
-        //                   alert(json.msg)
-        //                   this.getData()
-        //                 })
-        //                 .catch(e => {
-        //                   alert(e)
-        //                   this.getData()
-        //                 })
-        //             }
-        //             // alert(json.msg)
-
-        //             this.setState({
-        //               okText: 'OK',
-        //               uploading: false,
-        //               isModal: false,
-        //             })
-        //           })
-        //           .catch(e => {
-        //             alert(e)
-        //           })
-        //       }
-        //     } else {
-        //       this.setState({
-        //         okText: 'OK',
-        //         uploading: false,
-        //       })
-        //       alert(json.msg)
-        //     }
-        //   })
-        //   .catch(e => {
-        //     this.setState({
-        //       okText: 'OK',
-        //       uploading: false,
-        //     })
-        //     alert(e)
-        //   })
-      }
+      console.log('Received values of form: ', values);
+      this.setState({
+        goodsSn: values.goodsSn || '',
+        orderNo: values.orderNo || '',
+        userName: values.userName || '',
+        orderStatus: values.orderStatus || '',
+      }, () => {
+        this.getData()
+      })
     });
   }
   setPmName = (record) => {
@@ -286,8 +169,8 @@ class Apppm extends Component {
         alert(e)
       })
   }
-  updateApk = (record) => {
-    fetch(CONFIG.devURL + `/songhengstore/images`, {
+  sendPm = (record) => {
+    fetch(CONFIG.devURL + `/order/deliverGoods?orderNo=${record.orderNo}&goodsSn=${record.goodssn}`, {
       method: 'GET',
       credentials: 'include',
       mode: 'cors'
@@ -295,11 +178,8 @@ class Apppm extends Component {
       .then(res => res.json())
       .then(json => {
         console.log(json)
-        if (json.code === 200) {
-          alert(json.msg)
-        } else {
-          alert(json.msg)
-        }
+        this.getData()
+        alert(json.message)
       })
       .catch(e => {
         alert(e)
@@ -418,6 +298,49 @@ class Apppm extends Component {
         </Header>
         <Content style={{ margin: '24px 16px 0', textAlign: 'left' }}>
           <div style={{ padding: 24, background: '#fff', minHeight: 600 }}>
+
+            <Form onSubmit={this.handleSearch} layout="inline">
+              <FormItem label="商品编号">
+                {getFieldDecorator('goodsSn', {
+                })(
+                  <Input
+                    placeholder="null"
+                    style={{ width: 200, margin: '0 8px 8px 0' }}>
+                  </Input>
+                )}
+              </FormItem>
+              <FormItem label="订单编号">
+                {getFieldDecorator('orderNo', {
+                })(
+                  <Input
+                    placeholder="null"
+                    style={{ width: 200, margin: '0 8px 8px 0' }}>
+                  </Input>
+                )}
+              </FormItem>
+              <FormItem label="参与者">
+                {getFieldDecorator('userName', {
+                })(
+                  <Input
+                    placeholder="null"
+                    style={{ width: 200, margin: '0 8px 8px 0' }}>
+                  </Input>
+                )}
+              </FormItem>
+              <br/>
+              <FormItem label="订单状态">
+                {getFieldDecorator('orderStatus', {
+                })(
+                  <RadioGroup>
+                    <Radio value={'0'}>竞拍失败</Radio>
+                    <Radio value={'1'}>交易成交</Radio>
+                    <Radio value={'2'}>已发货</Radio>
+                  </RadioGroup>
+                )}
+              </FormItem>
+
+              <Button onClick={this.handleSearch} type="primary" style={{ margin: '0 8px 8px 0'}}>搜索</Button>
+            </Form>
           {/*
             <span>商品编号：</span>
             <Input
@@ -446,83 +369,6 @@ class Apppm extends Component {
 
             <Button onClick={this.showModal} style={{ margin: '0 8px 8px 0'}}>重置</Button>
           */}
-
-            <br/>
-
-            <Modal
-              title={this.state.modalTitle}
-              visible={this.state.isModal}
-              onOk={this.handleSubmit}
-              onCancel={this.handleCancel}
-              okText={this.state.okText}
-            >
-              <Form onSubmit={this.handleSubmit} className="login-form">
-                <FormItem label="商品名" {...formItemLayout}>
-                  {getFieldDecorator('goodstitle', {
-                    rules: [{ required: true, message: '请输入商品名！' }],
-                  })(
-                    <Input placeholder="商品名" />
-                  )}
-                </FormItem>
-                <FormItem label="起拍价" {...formItemLayout}>
-                  {getFieldDecorator('floorprice', {
-                    rules: [{ required: true, message: '请输入起拍价！' }],
-                  })(
-                    <InputNumber min={0} max={99999} />
-                  )}
-                </FormItem>
-                <FormItem label="拍卖时间" {...formItemLayout}>
-                  {getFieldDecorator('alldate', {
-                    initialValue: [moment(this.state.startDate, 'YYYY-MM-DD'), moment(this.state.endDate, 'YYYY-MM-DD')],
-                    rules: [{ required: true, message: '请输入拍卖时间！' }],
-                  })(
-                    <RangePicker
-                      showTime={true}
-                      format={'YYYY/MM/DD HH:mm:ss'}
-                      onChange={this.handleDatepicker.bind(this)}
-                      style={{ margin: '0 8px 8px 0' }}
-                    />
-                  )}
-                </FormItem>
-                <FormItem label="描述" {...formItemLayout}>
-                  {getFieldDecorator('goodsdesc', {
-                    initialValue: '品牌：\r型号：\rCPU：\r显卡：\r内存：\r分辨率：\r操作系统：\r新旧程度：'
-                  })(
-                    <TextArea placeholder="" autosize={{ minRows: 6, maxRows: 12 }} />
-                  )}
-                </FormItem>
-                <FormItem label="加价金额" {...formItemLayout}>
-                  {getFieldDecorator('addmoney', {
-                    rules: [{
-                      required: true,
-                      pattern: /^(-)?\d+(\.\d+)?$/,
-                      message: '请输入正确的加价金额！'
-                    }],
-                  })(
-                    <InputNumber min={1} max={99999} />
-                  )}
-                </FormItem>
-                <FormItem label="上传图片" {...formItemLayout}>
-                  {getFieldDecorator('imgs', {
-                    valuePropName: 'fileList',
-                    getValueFromEvent: this.normFile,
-                  })(
-                      // <input type="file"/>
-                    <Upload
-                      listType="picture"
-                      action={CONFIG.devURL + `/images`}
-                      customRequest={this.handleUpload}
-                      beforeUpload={(file, fileList) => {
-                        console.log(fileList)
-                      }}>
-                      <Button>
-                        <Icon type="upload" /> 点击上传
-                      </Button>
-                    </Upload>
-                  )}
-                </FormItem>
-              </Form>
-            </Modal>
 
             <Table rowKey="id" columns={this.state.columns} dataSource={this.state.dataArr} pagination={this.state.pagination} />
             {/*

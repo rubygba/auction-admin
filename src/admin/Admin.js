@@ -83,7 +83,7 @@ class Admin extends Component {
               <Route exact path="/push/ad" component={Appad}/>
               <Route path="/push/addetail/:pid/:eid/:uid" component={Appaddetail}/>
               <Route exact path="/push/pmdetail/:pid" component={AppPmDetail}/>
-              <Route exact path="/push/pmdetail/:pid/:date" component={AppPmQidDetail}/>
+              <Route exact path="/push/pmqiddetail/:pid" component={AppPmQidDetail}/>
             </Switch>
             <Footer style={{ textAlign: 'center', color: '#ddd' }}>
               @GBA ©2018 Ant Design ©2016
