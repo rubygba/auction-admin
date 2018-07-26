@@ -18,6 +18,7 @@ const Search = Input.Search;
 const TextArea = Input.TextArea;
 const FormItem = Form.Item;
 const RadioGroup = Radio.Group;
+const confirm = Modal.confirm;
 
 class Apppm extends Component {
   constructor(props) {
@@ -74,14 +75,23 @@ class Apppm extends Component {
       }, {
         title: '操作',
         dataIndex: 'createTime',
-        render: (text, record) => (
-          <div>
-            <Button onClick={this.showModModal.bind(this, record)} type="primary" style={{margin: '0 8px 0 0'}}>编辑</Button>
-            <Link to={`/push/pmdetail/${record.goodssn}`}><Button onClick={this.setPmName.bind(this, record)} style={{margin: '0 8px 0 0'}}>查看商品</Button></Link>
-            <Link to={`/push/pmqiddetail/${record.goodssn}`}><Button style={{margin: '0 8px 0 0'}}>查看订单</Button></Link>
-            <Button onClick={this.deletePm.bind(this, record)}>强制下架</Button>
-          </div>),
-        }],
+        render: (text, record) => {
+          if (record.goodstatus === '未开始') {
+            return (<div>
+              <Button onClick={this.showModModal.bind(this, record)} type="primary" style={{margin: '0 8px 0 0'}}>编辑</Button>
+              <Link to={`/push/pmdetail/${record.goodssn}`}><Button onClick={this.setPmName.bind(this, record)} style={{margin: '0 8px 0 0'}}>查看商品</Button></Link>
+              <Link to={`/push/pmqiddetail/${record.goodssn}`}><Button style={{margin: '0 8px 0 0'}}>查看订单</Button></Link>
+              <Button onClick={this.showConfirm.bind(this, record)}>强制下架</Button>
+            </div>)
+          } else {
+            return (<div>
+              <Button onClick={this.showModModal.bind(this, record)} type="primary" style={{margin: '0 8px 0 0'}}>编辑</Button>
+              <Link to={`/push/pmdetail/${record.goodssn}`}><Button onClick={this.setPmName.bind(this, record)} style={{margin: '0 8px 0 0'}}>查看商品</Button></Link>
+              <Link to={`/push/pmqiddetail/${record.goodssn}`}><Button style={{margin: '0 8px 0 0'}}>查看订单</Button></Link>
+            </div>)
+          }
+        }
+      }],
       dataArr: [],
     };
 
@@ -353,6 +363,17 @@ class Apppm extends Component {
         alert(e)
       })
   }
+  showConfirm = (record) => {
+    confirm({
+      title: '确认要下架商品？',
+      onOk() {
+        this.deletePm(record)
+      },
+      onCancel() {
+        console.log('Cancel');
+      },
+    });
+  }
   updateApk = (record) => {
     fetch(CONFIG.devURL + `/songhengstore/images`, {
       method: 'GET',
@@ -387,7 +408,7 @@ class Apppm extends Component {
         }
         _imgs.push(temp)
         // 处理图片上传
-        this.filesTable[-(i + 1)] = record.imgs[i]
+        this.state.filesTable[-(i + 1)] = record.imgs[i]
       }
     }
 

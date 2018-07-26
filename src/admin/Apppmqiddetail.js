@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Link, Route } from 'react-router-dom'
 import CONFIG from '../common/config';
-import { getFormatDate, getFormatDate2 } from '../common/tools';
+import { getFormatDate, getFormatDate2, getFormatDate3 } from '../common/tools';
 
 import { Layout, Breadcrumb, Menu, Icon, LocaleProvider, DatePicker, message, Button, Table, Input, InputNumber, Modal, Radio, Form, Upload } from 'antd';
 import Downhead from './Downhead'
@@ -56,10 +56,28 @@ class Apppm extends Component {
       }, {
         title: '状态',
         dataIndex: 'orderStatus',
-        render: (text) => <span>{text}</span>
+        render: (text) => {
+          let _txt = text
+          switch(_txt) {
+            case 0:
+              _txt = '竞拍实拍'
+              break;
+            case 1:
+              _txt = '竞拍成功'
+              break;
+            case 2:
+              _txt = '交易成功'
+              break;
+            case 3:
+              _txt = '拍卖进行中'
+              break;
+          }
+          return (<span>{_txt}</span>)
+        }
       }, {
         title: '订单时间',
         dataIndex: 'createTime',
+        render: (text) => <span>{getFormatDate3(text)}</span>
       }, {
         title: '商品编号',
         dataIndex: 'goodsSn',

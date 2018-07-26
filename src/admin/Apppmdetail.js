@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Link, Route } from 'react-router-dom'
 import CONFIG from '../common/config';
-import { getFormatDate, getFormatDate2 } from '../common/tools';
+import { getFormatDate, getFormatDate2, getFormatDate3 } from '../common/tools';
 
 import { Layout, Breadcrumb, Menu, Icon, LocaleProvider, DatePicker, message, Button, Table, Input, InputNumber, Modal, Radio, Form, Upload } from 'antd';
 import Downhead from './Downhead'
@@ -53,35 +53,6 @@ class Apppm extends Component {
         total: 10,
         defaultPageSize: 10,
       },
-      columns: [{
-        title: '商品名',
-        dataIndex: 'goodstitle',
-      }, {
-        title: '起拍价',
-        dataIndex: 'floorprice',
-      }, {
-        title: '商品编号',
-        dataIndex: 'goodssn',
-      }, {
-        title: '状态',
-        dataIndex: 'goodstatus',
-      }, {
-        title: '开始时间',
-        dataIndex: 'begindate',
-      }, {
-        title: '结束时间',
-        dataIndex: 'enddate',
-      }, {
-        title: '操作',
-        dataIndex: 'createTime',
-        render: (text, record) => (
-          <div>
-            <Button onClick={this.showModModal.bind(this, record)} type="primary" style={{margin: '0 8px 0 0'}}>编辑</Button>
-            <Link to={`/push/pmdetail/${record.goodssn}`}><Button onClick={this.setPmName.bind(this, record)} style={{margin: '0 8px 0 0'}}>查看商品</Button></Link>
-            <Link to={`/push/pmqiddetail/${record.goodssn}`}><Button onClick={this.updateApk.bind(this, record)} style={{margin: '0 8px 0 0'}}>查看订单</Button></Link>
-            <Button onClick={this.updateApk.bind(this, record)}>强制下架</Button>
-          </div>),
-        }],
       dataArr: [],
     };
 
@@ -161,6 +132,23 @@ class Apppm extends Component {
       adminName = '管理员'
     }
 
+    let _status = this.state.goodDetail.status
+    switch(_status) {
+      case 0:
+        _status = '已下架'
+        break;
+      case 1:
+        _status = '拍卖进行中'
+        break;
+      case 2:
+        _status = '拍卖已结束'
+        break;
+      case 3:
+        _status = '拍卖未开始'
+        break;
+      default:
+    }
+
     return (
       <div>
         <Header style={{ background: '#fff', padding: '20px', textAlign: 'left' }}>
@@ -174,13 +162,13 @@ class Apppm extends Component {
         <Content style={{ margin: '24px 16px 0', textAlign: 'left' }}>
           <div style={{ padding: 24, background: '#fff', minHeight: 600 }}>
             <p>商品编号：<span>{this.props.match.params.pid}</span></p>
-            <p>拍卖状态：<span>{this.state.goodDetail.status}</span></p>
+            <p>拍卖状态：<span>{_status}</span></p>
             <p>当前参与拍卖人数：<span>{this.state.goodDetail.auctionTime}人</span></p>
             <p>当前价格：<span>{this.state.goodDetail.nowPrice}元</span></p>
             <p>商品名：<span>{this.state.goodDetail.goodsTitle}</span></p>
             <p>起拍价：<span>{this.state.goodDetail.floorPrice}元</span></p>
-            <p>开始时间：<span>{this.state.goodDetail.beginDate}</span></p>
-            <p>结束时间：<span>{this.state.goodDetail.endDate}</span></p>
+            <p>开始时间：<span>{getFormatDate3(this.state.goodDetail.beginDate)}</span></p>
+            <p>结束时间：<span>{getFormatDate3(this.state.goodDetail.endDate)}</span></p>
             <p>商品描述</p>
             <TextArea value={this.state.goodDetail.goodsDesc} rows={4}></TextArea>
           </div>

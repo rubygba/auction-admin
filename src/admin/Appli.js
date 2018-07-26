@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Link, Route } from 'react-router-dom'
 import CONFIG from '../common/config';
-import { getFormatDate, getFormatDate2 } from '../common/tools';
+import { getFormatDate, getFormatDate2, getFormatDate3 } from '../common/tools';
 
 import { Layout, Breadcrumb, Menu, Icon, LocaleProvider, DatePicker, message, Button, Table, Input, InputNumber, Modal, Radio, Form, Upload } from 'antd';
 import Downhead from './Downhead'
@@ -18,6 +18,7 @@ const Search = Input.Search;
 const TextArea = Input.TextArea;
 const FormItem = Form.Item;
 const RadioGroup = Radio.Group;
+const confirm = Modal.confirm;
 
 class Apppm extends Component {
   constructor(props) {
@@ -60,22 +61,48 @@ class Apppm extends Component {
       }, {
         title: '状态',
         dataIndex: 'orderStatus',
-        render: (text) => <span>{text}</span>
+        render: (text) => {
+          let _txt = text
+          switch(_txt) {
+            case 0:
+              _txt = '竞拍实拍'
+              break;
+            case 1:
+              _txt = '竞拍成功'
+              break;
+            case 2:
+              _txt = '交易成功'
+              break;
+            case 3:
+              _txt = '拍卖进行中'
+              break;
+          }
+          return (<span>{_txt}</span>)
+        }
       }, {
         title: '订单时间',
         dataIndex: 'createTime',
+        render: (text) => <span>{getFormatDate3(text)}</span>
       }, {
         title: '商品编号',
         dataIndex: 'goodsSn',
       }, {
         title: '操作',
         dataIndex: 'createTime',
-        render: (text, record) => (
-          <div>
-            <Button onClick={this.showModModal.bind(this, record)} type="primary" style={{margin: '0 8px 0 0'}}>出价记录</Button>
-            <Button onClick={this.sendPm.bind(this, record)} style={{margin: '0 8px 0 0'}}>发货</Button>
-          </div>),
-        }],
+        render: (text, record) => {
+          if (record.orderStatus === 2) {
+            return (<div>
+              <Button onClick={this.showModModal.bind(this, record)} style={{margin: '0 8px 0 0'}}>出价记录</Button>
+              <Button onClick={this.showConfirm.bind(this, record)} style={{margin: '0 8px 0 0'}}>发货</Button>
+            </div>)
+          } else {
+            return (<div>
+              <Button onClick={this.showModModal.bind(this, record)} style={{margin: '0 8px 0 0'}}>出价记录</Button>
+              <Button type="primary" style={{margin: '0 8px 0 0'}}>发货</Button>
+            </div>)
+          }
+        },
+      }],
       dataArr: [],
     };
 
@@ -184,6 +211,17 @@ class Apppm extends Component {
       .catch(e => {
         alert(e)
       })
+  }
+  showConfirm = (record) => {
+    confirm({
+      title: '确认发货',
+      onOk() {
+        this.sendPm(record)
+      },
+      onCancel() {
+        console.log('Cancel');
+      },
+    });
   }
   showModModal = (record) => {
     console.log(record)
