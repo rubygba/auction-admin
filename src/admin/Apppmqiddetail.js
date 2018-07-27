@@ -60,7 +60,7 @@ class Apppm extends Component {
           let _txt = text
           switch(_txt) {
             case 0:
-              _txt = '竞拍实拍'
+              _txt = '竞拍失败'
               break;
             case 1:
               _txt = '竞拍成功'
@@ -81,14 +81,14 @@ class Apppm extends Component {
       }, {
         title: '商品编号',
         dataIndex: 'goodsSn',
-      }, {
-        title: '操作',
-        dataIndex: 'createTime',
-        render: (text, record) => (
-          <div>
-            <Button type="primary" style={{margin: '0 8px 0 0'}}>出价记录</Button>
-          </div>),
-        }],
+      // }, {
+      //   title: '操作',
+      //   dataIndex: 'createTime',
+      //   render: (text, record) => (
+      //     <div>
+      //       <Button type="primary" style={{margin: '0 8px 0 0'}}>出价记录</Button>
+      //     </div>),
+      }],
       dataArr: [],
     };
 

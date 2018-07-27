@@ -65,7 +65,7 @@ class Apppm extends Component {
           let _txt = text
           switch(_txt) {
             case 0:
-              _txt = '竞拍实拍'
+              _txt = '竞拍失败'
               break;
             case 1:
               _txt = '竞拍成功'
@@ -90,18 +90,12 @@ class Apppm extends Component {
         title: '操作',
         dataIndex: 'createTime',
         render: (text, record) => {
-          if (record.orderStatus === 2) {
-            return (<div>
-              <Button onClick={this.showModModal.bind(this, record)} style={{margin: '0 8px 0 0'}}>出价记录</Button>
-              <Button onClick={this.showConfirm.bind(this, record)} style={{margin: '0 8px 0 0'}}>发货</Button>
-            </div>)
+          if (record.orderStatus == 1) {
+            return (<Button onClick={this.showConfirm.bind(this, record)} type="primary" style={{margin: '0 8px 0 0'}}>发货</Button>)
           } else {
-            return (<div>
-              <Button onClick={this.showModModal.bind(this, record)} style={{margin: '0 8px 0 0'}}>出价记录</Button>
-              <Button type="primary" style={{margin: '0 8px 0 0'}}>发货</Button>
-            </div>)
+            return (<Button disabled style={{margin: '0 8px 0 0'}}>发货</Button>)
           }
-        },
+        }
       }],
       dataArr: [],
     };
@@ -197,7 +191,7 @@ class Apppm extends Component {
       })
   }
   sendPm = (record) => {
-    fetch(CONFIG.devURL + `/order/deliverGoods?orderNo=${record.orderNo}&goodsSn=${record.goodssn}`, {
+    fetch(CONFIG.devURL + `/order/deliverGoods?orderNo=${record.orderNo}&goodsSn=${record.goodsSn}`, {
       method: 'GET',
       credentials: 'include',
       mode: 'cors'
@@ -213,10 +207,11 @@ class Apppm extends Component {
       })
   }
   showConfirm = (record) => {
+    let scope = this
     confirm({
       title: '确认发货',
       onOk() {
-        this.sendPm(record)
+        scope.sendPm(record)
       },
       onCancel() {
         console.log('Cancel');
@@ -370,7 +365,7 @@ class Apppm extends Component {
                 {getFieldDecorator('orderStatus', {
                 })(
                   <RadioGroup>
-                    <Radio value={'0'}>竞拍失败</Radio>
+                    {/*<Radio value={'0'}>竞拍失败</Radio>*/}
                     <Radio value={'1'}>交易成交</Radio>
                     <Radio value={'2'}>已发货</Radio>
                   </RadioGroup>

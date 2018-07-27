@@ -171,10 +171,10 @@ class Apppm extends Component {
 
         console.log('Received values of form: ', values);
         // let _token = window.localStorage.tokenAdmin
-        let _pre = '/goods/addgoods?'
-        if (this.state.isModify) {
-          _pre = '/goods/editGoods?goodsSn=' + this.state.modifyId + '&'
-        }
+        // let _pre = '/goods/addgoods?'
+        // if (this.state.isModify) {
+        //   _pre = '/goods/editGoods?goodsSn=' + this.state.modifyId + '&'
+        // }
 
         // 处理图片上传
         let imgStr = []
@@ -196,7 +196,12 @@ class Apppm extends Component {
         if (values.addmoney5) addStr.push(values.addmoney5)
         addStr = addStr.join(',')
 
-        fetch(CONFIG.devURL + _pre + `goodstitle=${values.goodstitle}&goodsdesc=${values.goodsdesc}&floorprice=${values.floorprice}&begindate=${this.state.begindate}&enddate=${this.state.enddate}&imgs=${imgStr}&addmoney=${addStr}`, {
+        let _url = CONFIG.devURL + `/goods/addgoods?goodstitle=${values.goodstitle}&goodsdesc=${values.goodsdesc}&floorprice=${values.floorprice}&begindate=${this.state.begindate}&enddate=${this.state.enddate}&imgs=${imgStr}&addmoney=${addStr}`
+        if (this.state.isModify) {
+          _url =  CONFIG.devURL + `/goods/editGoods?goodsSn=${this.state.modifyId}&goodsTitle=${values.goodstitle}&goodsDesc=${values.goodsdesc}&floorPrice=${values.floorprice}&beginDate=${this.state.begindate}&endDate=${this.state.enddate}&imgs=${imgStr}&addMoney=${addStr}`
+        }
+
+        fetch(_url, {
           method: 'GET',
           credentials: 'include',
           mode: 'cors'
@@ -204,7 +209,7 @@ class Apppm extends Component {
           .then(res => res.json())
           .then(json => {
             console.log(json)
-            alert(json.message);
+            alert(json.message || json.data);
             this.getData()
             this.setState({
               okText: 'OK',
@@ -364,10 +369,11 @@ class Apppm extends Component {
       })
   }
   showConfirm = (record) => {
+    let scope = this
     confirm({
       title: '确认要下架商品？',
       onOk() {
-        this.deletePm(record)
+        scope.deletePm(record)
       },
       onCancel() {
         console.log('Cancel');
@@ -539,7 +545,8 @@ class Apppm extends Component {
           </Breadcrumb>
         </Header>
         <Content style={{ margin: '24px 16px 0', textAlign: 'left' }}>
-          <div style={{ padding: 24, background: '#fff', minHeight: 600 }}>
+        <div style={{ padding: 24, background: '#fff', minHeight: 600 }}>
+
           <Form onSubmit={this.handleSearch} layout="inline">
             <FormItem label="商品名">
               {getFieldDecorator('top_name', {
